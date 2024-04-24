@@ -1,29 +1,26 @@
+#include <cmath>
 #include <iostream>
 
-int Gcd(int a, int b) {
-  if (b == 0) {
-    return a;
-  }
-  return Gcd(b, a % b);
-}
-
 int main() {
-  int a;
-  int b;
-  std::cin >> a >> b;
-  if (a == 0) {
-    b = 1;
-  } else {
-    if (b < 0) {
-      a *= -1;
-      b *= -1;
+  bool is_reapet = true;
+  int max_el = 0;
+  int after_max = 0;
+
+  while (is_reapet) {
+    int a;
+    std::cin >> a;
+    if (a) {
+      if (a >= max_el) {
+        after_max = max_el;
+        max_el = a;
+      } else if (a > after_max) {
+        after_max = a;
+      }
+    } else {
+      is_reapet = false;
     }
-    int g = Gcd(abs(a), abs(b));
-    a /= g;
-    b /= g;
   }
 
-  std::cout << a << ' ' << b;
-
+  std::cout << after_max;
   return 0;
 }
