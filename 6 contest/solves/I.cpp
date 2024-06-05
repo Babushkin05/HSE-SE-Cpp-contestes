@@ -15,9 +15,11 @@ int main() {
   std::vector<std::pair<int, std::string>> v;
   v.reserve(words.size());
   for (const auto &[key, value] : words) {
-    v.emplace_back(-value, key);
+    v.emplace_back(value, key);
   }
-  sort(v.begin(), v.end());
+  sort(v.begin(), v.end(), [](const auto &lhs, const auto &rhs) {
+    return lhs.first > rhs.first || (lhs.first == rhs.first && lhs.second < rhs.second);
+  });
   for (const auto &word : v) {
     std::cout << word.second << '\n';
   }
