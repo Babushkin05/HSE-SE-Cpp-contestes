@@ -48,16 +48,16 @@ public:
   };
   Iterator begin() const { return Iterator{beg_, end_, step_, beg_}; } // NOLINT
   Iterator end() const { return Iterator{beg_, end_, step_, end_}; }   // NOLINT
-  Iterator rbegin() const { // NOLINT
+  Iterator rbegin() const {                                            // NOLINT
     return Iterator{end_, beg_, -step_,
                     beg_ +
                         (std::abs(end_ - beg_) + std::abs(step_) - 1) /
-                            std::abs(step_) * step_ -
+                            std::max(1, std::abs(step_)) * step_ -
                         step_};
   }
   Iterator rend() const { // NOLINT
     return Iterator{end_, beg_, -step_, beg_ - step_};
-  } 
+  }
 };
 
 #endif
