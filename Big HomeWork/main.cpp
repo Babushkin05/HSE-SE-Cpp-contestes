@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include "range.h"
 
 int main() {
 
@@ -9,26 +10,12 @@ int main() {
   std::cin.tie(nullptr);
   std::cout.tie(nullptr);
 
-  int n = 0;
-  std::cin >> n;
-  std::vector<std::string> v(n);
+  Range c(5);
 
-  for (int i = 0; i < n; ++i) {
-    std::cin >> v[i];
-  }
-  int ans = 0;
-  for (const auto &i : v) {
-    for (const auto &j : v) {
-      if (&i == &j) {
-        continue;
-      }
-      if (i.find(j) != std::string::npos) {
-        ++ans;
-      }
-    }
+  for(const auto& i : Range(5,10,2)){
+    std::cout<<i<<' ';
   }
 
-  std::cout << ans;
 
   return 0;
 }
