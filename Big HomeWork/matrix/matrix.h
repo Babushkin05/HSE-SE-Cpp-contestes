@@ -10,216 +10,153 @@ class MatrixOutOfRange : public std::runtime_error {
 public:
   MatrixOutOfRange() : std::runtime_error("Index out of range") {}
 };
-template<typename T, size_t N, size_t M>
-class Matrix {
- public:
-  Matrix& operator+=(const Matrix& other);
-  Matrix& operator-=(const Matrix& other);
-  Matrix& operator*=(const Matrix<T, M, M>& other);
-  Matrix& operator*=(int other);
-  Matrix& operator/=(int other);
-  size_t RowsNumber() const;
-  size_t ColumnsNumber() const;
-  T& operator()(size_t i, size_t j);
-  const T& operator()(size_t i, size_t j) const;
-  T& At(size_t i, size_t j);
-  const T& At(size_t i, size_t j) const;
-  T data_[N][M];
+
+template <typename T, const size_t Row, const size_t Column> class Matrix {
+public:
+  T matrix_[Row][Column];
+  size_t RowsNumber() const { return Row; }
+  size_t ColumnsNumber() const { return Column; }
+
+  T &operator()(size_t i, size_t j) { return matrix_[i][j]; }
+  T operator()(size_t i, size_t j) const { return matrix_[i][j]; }
+
+  T &At(size_t i, size_t j) {
+    if (i >= Row || j >= Column) {
+      throw MatrixOutOfRange{};
+    }
+    return matrix_[i][j];
+  }
+  T At(size_t i, size_t j) const {
+    if (i >= Row || j >= Column) {
+      throw MatrixOutOfRange{};
+    }
+    return matrix_[i][j];
+  }
+
+  Matrix operator+(const Matrix &mat) const {
+    Matrix<T, Row, Column> temp;
+    for (size_t i = 0; i < RowsNumber(); ++i) {
+      for (size_t j = 0; j < ColumnsNumber(); ++j) {
+        temp(i, j) = matrix_[i][j] + mat(i, j);
+      }
+    }
+    return temp;
+  }
+  Matrix operator-(const Matrix &mat) const {
+    Matrix<T, Row, Column> temp;
+    for (size_t i = 0; i < RowsNumber(); ++i) {
+      for (size_t j = 0; j < ColumnsNumber(); ++j) {
+        temp(i, j) = matrix_[i][j] - mat(i, j);
+      }
+    }
+    return temp;
+  }
+
+  template <const size_t Col2>
+  const Matrix<T, Row, Col2>
+  operator*(const Matrix<T, Column, Col2> &mat) const {
+    Matrix<T, Row, Col2> temp;
+    for (size_t i = 0; i < RowsNumber(); ++i) {
+      for (size_t j = 0; j < mat.ColumnsNumber(); ++j) {
+        temp(i, j) = 0;
+        for (size_t k = 0; k < ColumnsNumber(); ++k) {
+          temp(i, j) += matrix_[i][k] * mat(k, j);
+        }
+      }
+    }
+    return temp;
+  }
+
+  Matrix &operator+=(const Matrix &mat) {
+    *this = *this + mat;
+    return *this;
+  }
+
+  Matrix &operator-=(const Matrix &mat) {
+    *this = *this - mat;
+    return *this;
+  }
+  Matrix &operator*=(const Matrix<T, Column, Column> &mat) {
+    *this = *this * mat;
+    return *this;
+  }
+  Matrix operator*(int num) const {
+    Matrix<T, Row, Column> temp;
+    for (size_t i = 0; i < RowsNumber(); ++i) {
+      for (size_t j = 0; j < ColumnsNumber(); ++j) {
+        temp(i, j) = num * matrix_[i][j];
+      }
+    }
+    return temp;
+  }
+
+  Matrix &operator*=(int num) {
+    *this = *this * num;
+    return *this;
+  }
+
+  Matrix operator/(int num) const {
+    Matrix<T, Row, Column> temp;
+    for (size_t i = 0; i < RowsNumber(); ++i) {
+      for (size_t j = 0; j < ColumnsNumber(); ++j) {
+        temp(i, j) = matrix_[i][j] / num;
+      }
+    }
+    return temp;
+  }
+  Matrix &operator/=(int num) {
+    *this = *this / num;
+    return *this;
+  }
+  bool operator==(const Matrix &mat) const {
+    bool f = true;
+    for (size_t i = 0; i < RowsNumber(); ++i) {
+      for (size_t j = 0; j < ColumnsNumber(); ++j) {
+        f &= matrix_[i][j] == mat(i, j);
+      }
+    }
+    return f;
+  }
+  bool operator!=(const Matrix &mat) const { return !(*this == mat); }
 };
 
-template<typename T, size_t N, size_t M>
-Matrix<T,N,M>& Matrix<T,N,M>::operator+=(const Matrix& other) {
-    for(size_t i = 0; i < N; ++i) {
-        for(size_t j = 0; j < M; ++j) {
-            operator()(i,j) += other(i, j);
-        }
+template <typename T, const size_t Row, const size_t Col>
+Matrix<T, Row, Col> operator*(int num, const Matrix<T, Row, Col> mat) {
+  return mat * num;
+}
+
+template <typename T, const size_t Row, const size_t Col>
+std::ostream &operator<<(std::ostream &sout, const Matrix<T, Row, Col> &mat) {
+  for (size_t i = 0; i < Row; ++i) {
+    for (size_t j = 0; j + 1 < Col; ++j) {
+      sout << mat(i, j) << ' ';
     }
-    return *this;
+    sout << mat(i, Col - 1) << '\n';
+  }
+  return sout;
 }
 
-template<typename T, size_t N, size_t M>
-Matrix<T,N,M>& Matrix<T,N,M>::operator-=(const Matrix& other) {
-    for(size_t i = 0; i < N; ++i) {
-        for(size_t j = 0; j < M; ++j) {
-            operator()(i,j) -= other(i, j);
-        }
+template <typename T, const size_t Row, const size_t Col>
+std::istream &operator>>(std::istream &sin, Matrix<T, Row, Col> &mat) {
+  for (size_t i = 0; i < Row; ++i) {
+    for (size_t j = 0; j < Col; ++j) {
+      T a;
+      sin >> a;
+      mat(i, j) = a;
     }
-    return *this;
+  }
+  return sin;
 }
-
-template<typename T, size_t N, size_t M>
-Matrix<T,N,M>& Matrix<T,N,M>::operator*=(const Matrix<T, M, M>& other) {
-    Matrix<T,N,M> result;
-    for(size_t i = 0; i < N; ++i) {
-        for(size_t j = 0; j < M; ++j) {
-            result(i, j) = 0;
-            for(size_t k = 0; k < M; ++k) {
-                result(i, j) += operator()(i,k) * other(k,j);
-            }
-        }
+template <typename T, const size_t Row, const size_t Column>
+Matrix<T, Column, Row> GetTransposed(const Matrix<T, Row, Column> &mat) {
+  const size_t col = mat.ColumnsNumber();
+  const size_t row = mat.RowsNumber();
+  Matrix<T, Column, Row> temp;
+  for (size_t i = 0; i < col; ++i) {
+    for (size_t j = 0; j < row; ++j) {
+      temp(i, j) = mat(j, i);
     }
-    return *this = result;
-}
-
-template<typename T, size_t N, size_t M>
-Matrix<T, N, M>& Matrix<T,N,M>::operator*=(int other) {
-    for(size_t i = 0; i < N; ++i) {
-        for(size_t j = 0; j < M; ++j) {
-            operator()(i,j) *= other;
-        }
-    }
-    return *this;
-}
-
-template<typename T, size_t N, size_t M>
-Matrix<T,N,M>& Matrix<T,N,M>::operator/=(int other) {
-    for(size_t i = 0; i < N; ++i) {
-        for(size_t j = 0; j < M; ++j) {
-            operator()(i,j) /= other;
-        }
-    }
-    return *this;
-}
-
-template<typename T, size_t N, size_t M>
-size_t Matrix<T,N,M>::RowsNumber() const {
-    return N;
-}
-
-template<typename T, size_t N, size_t M>
-size_t Matrix<T,N,M>::ColumnsNumber() const {
-    return M;
-}
-
-template<typename T, size_t N, size_t M>
-T& Matrix<T,N,M>::operator()(size_t i, size_t j) {
-    return data_[i][j];
-}
-
-template<typename T, size_t N, size_t M>
-const T& Matrix<T,N,M>::operator()(size_t i, size_t j) const {
-    return data_[i][j];
-}
-
-template<typename T, size_t N, size_t M>
-T& Matrix<T,N,M>::At(size_t i, size_t j) {
-    if(i >= N || j >= M) {
-        throw MatrixOutOfRange{};
-    }
-    return data_[i][j];
-}
-
-template<typename T, size_t N, size_t M>
-const T& Matrix<T,N,M>::At(size_t i, size_t j) const {
-    if(i >= N || j >= M) {
-        throw MatrixOutOfRange{};
-    }
-    return data_[i][j];
-}
-
-template<typename T, size_t N, size_t M>
-Matrix<T, M, N> GetTransposed(const Matrix<T, N, M>& matrix) {
-    Matrix<T, M, N> result;
-    for(size_t i = 0; i < N; ++i) {
-        for(size_t j = 0; j < M; ++j) {
-            result(j, i) = matrix(i, j);
-        }
-    }
-    return result;
-}
-
-template<typename T, size_t N>
-void Transpose(Matrix<T, N, N>& matrix) {
-    for (size_t i = 0; i < N; ++i) {
-        for (size_t j = i + 1; j < N; ++j) {
-            std::swap(matrix(i, j), matrix(j, i));
-        }
-    }
-}
-
-template<typename T, size_t N>
-T Trace(const Matrix<T, N, N>& matrix) {
-    T sum = 0;
-    for (size_t i = 0; i < N; ++i) {
-        sum += matrix(i, i);
-    }
-    return sum;
-}
-
-template<typename T, size_t N, size_t M>
-bool operator==(const Matrix<T, N, M>& lhs, const Matrix<T, N, M>& rhs) {
-    for(size_t i = 0; i < N; ++i) {
-        for(size_t j = 0; j < M; ++j) {
-            if(lhs(i,j) != rhs(i,j)) {
-                return false;
-            }
-        }
-    }
-    return true;
-}
-
-template<typename T, size_t N, size_t M>
-bool operator!=(const Matrix<T, N, M>& lhs, const Matrix<T, N, M>& rhs) {
-    return !(lhs == rhs);
-}
-
-template<typename T, size_t N, size_t M>
-Matrix<T,N,M> operator+(const Matrix<T, N, M>& lhs, const Matrix<T, N, M>& rhs) {
-    return Matrix<T,N,M>(lhs) += rhs;
-}
-
-template<typename T, size_t N, size_t M>
-Matrix<T,N,M> operator-(const Matrix<T, N, M>& lhs, const Matrix<T, N, M>& rhs) {
-    return Matrix<T,N,M>(lhs) -= rhs;
-}
-
-template<typename T, size_t N, size_t M, size_t K>
-Matrix<T,N,K> operator*(const Matrix<T, N, M>& lhs, const Matrix<T, M, K>& rhs) {
-    Matrix<T,N,K> result;
-    for(size_t i = 0; i < N; ++i) {
-        for(size_t j = 0; j < K; ++j) {
-            result(i, j) = 0;
-            for(size_t k = 0; k < M; ++k) {
-                result(i, j) += lhs(i,k) * rhs(k,j);
-            }
-        }
-    }
-    return result;
-}
-
-template<typename T, size_t N, size_t M>
-Matrix<T,N,M> operator*(const Matrix<T, N, M>& lhs, int rhs) {
-    return Matrix<T,N,M>(lhs) *= rhs;
-}
-
-template<typename T, size_t N, size_t M>
-Matrix<T,N,M> operator*(int lhs, const Matrix<T, N, M>& rhs) {
-    return Matrix<T,N,M>(rhs) *= lhs;
-}
-
-template<typename T, size_t N, size_t M>
-Matrix<T,N,M> operator/(const Matrix<T, N, M>& lhs, int rhs) {
-    return Matrix<T,N,M>(lhs) /= rhs;
-}
-
-template<typename T, size_t N, size_t M>
-std::ostream& operator<<(std::ostream& stream, const Matrix<T,N,M>& other) {
-    for(size_t i = 0; i < N; ++i) {
-        for(size_t j = 0; j + 1 < M; ++j) {
-            stream << other(i,j) << " ";
-        }
-        stream << other(i, M - 1) << std::endl;
-    } 
-    return stream;
-}
-
-template<typename T, size_t N, size_t M>
-std::istream& operator>>(std::istream& stream, Matrix<T,N,M>& other) {
-    for(size_t i = 0; i < N; ++i) {
-        for(size_t j = 0; j < M; ++j) {
-            stream >> other(i,j);
-        }
-    } 
-    return stream;
+  }
+  return temp;
 }
 #endif
