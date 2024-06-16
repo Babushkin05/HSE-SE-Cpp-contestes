@@ -26,16 +26,21 @@ public:
   public:
     Iterator(int beg, int end, int step, int cur)
         : beg_t_(beg), end_t_(end), step_t_(step), cur_(cur) {}
+
     Iterator &operator++() {
       cur_ += step_t_;
       return *this;
     }
+
     Iterator &operator--() {
       cur_ -= step_t_;
       return *this;
     }
+
     int &operator*() { return cur_; }
+
     int operator*() const { return cur_; }
+
     friend bool operator!=(const Iterator &a, const Iterator &b) {
       if ((a.end_t_ - a.beg_t_) * a.step_t_ <= 0) {
         return false;
@@ -46,8 +51,11 @@ public:
       return a.cur_ > b.cur_;
     }
   };
+
   Iterator begin() const { return Iterator{beg_, end_, step_, beg_}; } // NOLINT
+
   Iterator end() const { return Iterator{beg_, end_, step_, end_}; }   // NOLINT
+
   Iterator rbegin() const {                                            // NOLINT
     return Iterator{end_, beg_, -step_,
                     beg_ +
@@ -55,6 +63,7 @@ public:
                             std::max(1, std::abs(step_)) * step_ -
                         step_};
   }
+  
   Iterator rend() const { // NOLINT
     return Iterator{end_, beg_, -step_, beg_ - step_};
   }

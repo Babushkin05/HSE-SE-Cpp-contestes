@@ -1,3 +1,5 @@
+#define MATRIX_SQUARE_MATRIX_IMPLEMENTED
+
 #ifndef MATRIX_H
 #define MATRIX_H
 
@@ -5,11 +7,22 @@
 #include <iostream>
 #include <string>
 #include <utility>
+#include <cmath>
 
 class MatrixOutOfRange : public std::runtime_error {
 public:
   MatrixOutOfRange() : std::runtime_error("Index out of range") {}
 };
+
+class MatrixIsDegenerateError : public std::runtime_error {
+  public:
+  MatrixIsDegenerateError() : std::runtime_error("Matrix is degenerate") {}
+};
+
+template <typename T, const size_t Row, const size_t Column> class Matrix;
+
+template<typename T, const size_t N>
+T GetDeterminant(Matrix<T,N,N> &mat);
 
 template <typename T, const size_t Row, const size_t Column> class Matrix {
 public:
@@ -118,6 +131,22 @@ public:
     return f;
   }
   bool operator!=(const Matrix &mat) const { return !(*this == mat); }
+
+  T Determinant() const{
+    if(Column!=Row){
+      throw MatrixOutOfRange{};
+    }
+    return GetDeterminant(*this);
+  }
+
+  Matrix GetInversed(){
+    T det = Determinant();
+    if(det == 0){
+      throw MatrixIsDegenerateError{};
+    }
+
+  }
+
 };
 
 template <typename T, const size_t Row, const size_t Col>
@@ -159,4 +188,54 @@ Matrix<T, Column, Row> GetTransposed(const Matrix<T, Row, Column> &mat) {
   }
   return temp;
 }
+
+template <typename T, const size_t N>
+void Transpose(Matrix<T,N,N> &mat){
+  for(size_t i = 0; i< N;++i){
+    for(size_t j = i+1; j< N;++j){
+      std::swap(mat(i,j),mat(j,i));
+    }
+  }
+}
+
+template <typename T, const size_t N>
+T Trace(Matrix<T,N,N> &mat){
+  T sum;
+  for(size_t i = 0; i< N;++i){
+    sum+=mat(i,i);
+  }
+  return sum;
+}
+template<typename T, const size_t N>
+T GetDeterminant(Matrix<T,N,N> &mat) {
+    if(N==1){
+      return mat(0,0);
+    }
+    T sum;
+    for(size_t i = 0; i < N; ++i){
+      sum+=GetMinor(mat,i,0);
+    }
+    return sum;
+  }
+
+template <typename T, const size_t N>
+T GetMinor(Matrix<T,N,N> &mat, size_t a, size_t b){
+  if(N==1){
+      return mat(0,0);
+    }
+    Matrix<T,N-1,N-1> temp;
+      for(size_t i = 0;i<N;++i){
+        if(i==a){
+          continue;;
+        }
+        for(size_t j = 0; j< N;++j){
+          if(j==b){
+            continue;
+          }
+          temp(i,j) = mat(i,j);
+        }
+      }
+      return std::pow(-1,a+b)*GetDeterminant(temp);
+}
+
 #endif
